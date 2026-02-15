@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Aguarde 10 segundos...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body, html {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      position: fixed;
+    }
+    
+    #topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      z-index: 9999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      transition: all 0.5s ease;
+    }
+    
+    #topbar.hidden {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    
+    .timer-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+    }
+    
+    .timer-icon {
+      font-size: 28px;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    
+    .timer-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    #countdown {
+      font-size: 32px;
+      background: rgba(255,255,255,0.25);
+      padding: 8px 20px;
+      border-radius: 12px;
+      min-width: 60px;
+      text-align: center;
+      font-weight: bold;
+    }
+    
+    .timer-text {
+      font-size: 16px;
+      font-weight: normal;
+      opacity: 0.95;
+    }
+    
+    #content-frame {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: calc(100% - 70px);
+      border: none;
+      background: #fff;
+      transition: all 0.5s ease;
+    }
+    
+    #content-frame.fullscreen {
+      top: 0;
+      height: 100%;
+    }
+    
+    #progress-bar {
+      position: fixed;
+      top: 70px;
+      left: 0;
+      height: 5px;
+      background: #4ade80;
+      width: 0%;
+      transition: width 1s linear;
+      z-index: 9998;
+      box-shadow: 0 0 10px #4ade80;
+    }
+    
+    /* Modal de aviso */
+    #warning-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 99999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    #warning-modal.show {
+      display: flex;
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .modal-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 30px 20px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 90%;
+      width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-content h2 {
+      color: #fff;
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+    
+    .modal-content p {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    
+    .modal-timer {
+      font-size: 56px;
+      color: #fbbf24;
+      font-weight: bold;
+      margin: 15px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .modal-button {
+      background: #fff;
+      color: #667eea;
+      border: none;
+      padding: 15px 35px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: all 0.3s;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+    }
+    
+    .modal-button:active {
+      transform: scale(0.95);
+    }
+    
+    .lock-icon {
+      font-size: 56px;
+      margin-bottom: 15px;
+    }
+    
+    /* Ajustes para mobile */
+    @media (max-width: 480px) {
+      #topbar {
+        height: 65px;
+        font-size: 20px;
+      }
+      
+      #countdown {
+        font-size: 28px;
+        padding: 6px 16px;
+      }
+      
+      .timer-text {
+        font-size: 14px;
+      }
+      
+      #content-frame {
+        top: 65px;
+        height: calc(100% - 65px);
+      }
+      
+      #progress-bar {
+        top: 65px;
+      }
+      
+      .modal-content h2 {
+        font-size: 24px;
+      }
+      
+      .modal-timer {
+        font-size: 48px;
+      }
+    }
+    
+    /* Loading */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 9997;
+      color: #667eea;
+      font-size: 18px;
+    }
+    
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <div class="timer-container">
+      <span class="timer-icon">⏱️</span>
+      <div class="timer-display">
+        <span id="countdown">10</span>
+        <span class="timer-text">segundos</span>
+      </div>
+    </div>
+  </div>
+  
+  <div id="progress-bar"></div>
+  
+  <div id="loading" style="display: none;">
+    <div class="spinner"></div>
+    <p>Carregando conteúdo...</p>
+  </div>
+  
+  <iframe id="content-frame" 
+          src="https://www.mi-malist.com/doc_VzJwNTZUUjZXZUVURTBvT0I1TXpWdz09"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="eager"></iframe>
+
+  <!-- Modal de aviso -->
+  <div id="warning-modal">
+    <div class="modal-content">
+      <div class="lock-icon">🔒</div>
+      <h2>Aguarde!</h2>
+      <p>Você precisa aguardar o tempo terminar antes de sair.</p>
+      <div class="modal-timer">
+        <span id="modal-countdown">10</span>s
+      </div>
+      <p><strong>Por favor, permaneça na página</strong></p>
+      <button class="modal-button" onclick="closeModal()">Entendi</button>
+    </div>
+  </div>
+
+  <script>
+    // Prevenir zoom no iOS
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+    
+    // Pegar parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const key = urlParams.get('key') || '';
+    const external_id = urlParams.get('external_id') || '';
+    
+    let segundos = 10;
+    let timerCompleto = false;
+    let modalAberto = false;
+    
+    const countdownElement = document.getElementById('countdown');
+    const modalCountdown = document.getElementById('modal-countdown');
+    const topbar = document.getElementById('topbar');
+    const iframe = document.getElementById('content-frame');
+    const progressBar = document.getElementById('progress-bar');
+    const warningModal = document.getElementById('warning-modal');
+    const loading = document.getElementById('loading');
+    
+    // Atualizar barra de progresso
+    function updateProgress() {
+      const progress = ((10 - segundos) / 10) * 100;
+      progressBar.style.width = progress + '%';
+    }
+    
+    // Fechar modal
+    function closeModal() {
+      warningModal.classList.remove('show');
+      modalAberto = false;
+    }
+    
+    // Mostrar modal de aviso
+    function showWarning() {
+      if (!timerCompleto && !modalAberto) {
+        warningModal.classList.add('show');
+        modalAberto = true;
+        modalCountdown.textContent = segundos;
+      }
+    }
+    
+    // Bloquear saída da página
+    function preventExit(e) {
+      if (!timerCompleto) {
+        e.preventDefault();
+        e.returnValue = 'Aguarde os 10 segundos terminarem!';
+        showWarning();
+        return e.returnValue;
+      }
+    }
+    
+    window.addEventListener('beforeunload', preventExit);
+    
+    // Detectar perda de visibilidade (mobile)
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden && !timerCompleto) {
+        showWarning();
+      }
+    });
+    
+    // Detectar perda de foco
+    window.addEventListener('blur', function() {
+      if (!timerCompleto) {
+        setTimeout(showWarning, 100);
+      }
+    });
+    
+    window.addEventListener('pagehide', function() {
+      if (!timerCompleto) {
+        showWarning();
+      }
+    });
+    
+    // Bloquear teclas
+    document.addEventListener('keydown', function(e) {
+      if (!timerCompleto) {
+        if (e.key === 'F5' || 
+            (e.ctrlKey && (e.key === 'r' || e.key === 'w' || e.key === 'q')) ||
+            (e.altKey && e.key === 'F4') ||
+            e.key === 'Backspace') {
+          e.preventDefault();
+          showWarning();
+          return false;
+        }
+      }
+    });
+    
+    // Bloquear botão voltar
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+      if (!timerCompleto) {
+        history.pushState(null, null, location.href);
+        showWarning();
+      }
+    });
+    
+    // Bloquear menu de contexto durante contagem
+    document.addEventListener('contextmenu', function(e) {
+      if (!timerCompleto) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // Detectar carregamento do iframe
+    iframe.addEventListener('load', function() {
+      loading.style.display = 'none';
+    });
+    
+    iframe.addEventListener('error', function() {
+      loading.style.display = 'none';
+      console.log('Iframe carregado');
+    });
+    
+    // Mostrar loading se demorar
+    setTimeout(function() {
+      if (iframe.contentDocument === null) {
+        loading.style.display = 'block';
+      }
+    }, 500);
+    
+    // Contagem regressiva
+    const interval = setInterval(() => {
+      segundos--;
+      countdownElement.textContent = segundos.toString().padStart(2, '0');
+      if (modalAberto) {
+        modalCountdown.textContent = segundos;
+      }
+      updateProgress();
+      
+      if (segundos <= 0) {
+        clearInterval(interval);
+        timerCompleto = true;
+        
+        // Enviar postback
+        if (key && external_id) {
+          fetch(`https://track.bemobtrk.com/postback?key=${key}&external_id=${external_id}&payout=0.01`, {
+            mode: 'no-cors'
+          }).catch(err => console.log('Postback enviado'));
+        }
+        
+        // Animação de saída
+        topbar.classList.add('hidden');
+        iframe.classList.add('fullscreen');
+        closeModal();
+        
+        setTimeout(() => {
+          topbar.style.display = 'none';
+          progressBar.style.display = 'none';
+        }, 500);
+      }
+    }, 1000);
+    
+    // Iniciar
+    updateProgress();
+    
+    // Prevenir scroll indesejado no iOS
+    document.body.addEventListener('touchmove', function(e) {
+      if (e.target === document.body) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>
